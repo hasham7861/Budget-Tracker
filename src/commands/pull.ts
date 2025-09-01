@@ -1,5 +1,5 @@
-import { getTransactions, getAccounts } from '../services/plaid';
-import { getAccessToken, hasAccessToken } from '../utils/storage';
+import { getAccountByName, getTransactionsByAccountName } from '../services/plaid';
+import { getAccessToken, getCachedTransactions, hasAccessToken } from '../utils/storage';
 
 interface PullOptions {
   month: string;
@@ -15,8 +15,15 @@ export async function pullStatements(options: PullOptions) {
     return;
   }
 
+  // TODO: check cache conditional here
+  // const cachedTransactions = getCachedTransactions(options.month);
+  // if (!cachedTransactions) {
+  //   console.error('❌ No cached transactions found for the specified month.');
+  //   return;
+  // }
+
   const accessToken = getAccessToken()!;
-  
+
   try {
     const [year, month] = options.month.split('-');
     const startDate = `${year}-${month.padStart(2, '0')}-01`;
@@ -25,26 +32,22 @@ export async function pullStatements(options: PullOptions) {
 
     console.log(`📊 Fetching transactions from ${startDate} to ${endDate}...`);
     
-    const [accounts, transactions] = await Promise.all([
-      getAccounts(accessToken),
-      getTransactions(accessToken, startDate, endDate)
+    const [acc, transactions] = await Promise.all([
+      getAccountByName('RBC ION+ Visa', accessToken),
+      getTransactionsByAccountName('RBC ION+ Visa', accessToken, startDate, endDate)
     ]);
 
-    const totalIncome = transactions
-      .filter(tx => tx.amount < 0)
-      .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-    
     const totalExpenses = transactions
       .filter(tx => tx.amount > 0)
       .reduce((sum, tx) => sum + tx.amount, 0);
 
     const data = {
       month: options.month,
-      accounts: accounts.map(acc => ({
+      accounts: {
         name: acc.name,
         type: acc.type,
         balance: acc.balance.current
-      })),
+      },
       transactions: transactions.map(tx => ({
         date: tx.date,
         description: tx.name,
@@ -52,9 +55,7 @@ export async function pullStatements(options: PullOptions) {
         category: tx.category
       })),
       summary: {
-        totalIncome: Math.round(totalIncome * 100) / 100,
         totalExpenses: Math.round(totalExpenses * 100) / 100,
-        netAmount: Math.round((totalIncome - totalExpenses) * 100) / 100,
         transactionCount: transactions.length
       }
     };
@@ -66,7 +67,6 @@ export async function pullStatements(options: PullOptions) {
       data.transactions.forEach(tx => {
         console.log(`${tx.date},"${tx.description}",${tx.amount},${tx.category}`);
       });
-      console.log(`\n📊 Summary: Income: $${data.summary.totalIncome}, Expenses: $${data.summary.totalExpenses}, Net: $${data.summary.netAmount}`);
     }
 
     console.log(`\n✅ Found ${transactions.length} transactions for ${options.month}`);

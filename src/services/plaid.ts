@@ -86,6 +86,18 @@ export async function getAccounts(accessToken: string) {
   }
 }
 
+export async function getAccountByName(accountName: string, accessToken: string) {
+  const account = await  getAccounts(accessToken).then(accounts =>
+    accounts.find(account => account.name === accountName)
+  );
+
+  if(!account) {
+    throw new Error(`Account not found: ${accountName}`);
+  }
+
+  return account;
+}
+
 export async function getTransactions(accessToken: string, startDate: string, endDate: string) {
   try {
     const response = await plaidClient.transactionsGet({
@@ -107,4 +119,10 @@ export async function getTransactions(accessToken: string, startDate: string, en
     console.error('Error fetching transactions:', error);
     throw error;
   }
+}
+
+export async function getTransactionsByAccountName(accountName: string, accessToken: string, startDate: string, endDate: string) {
+  const account = await getAccountByName(accountName, accessToken);
+  const transactions = await getTransactions(accessToken, startDate, endDate);
+  return transactions.filter(tx => tx.accountId === account.accountId);
 }

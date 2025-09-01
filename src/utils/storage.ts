@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { TransactionData } from 'plaid';
 
 const CONFIG_DIR = path.join(os.homedir(), '.budget-tracker');
 const ACCESS_TOKEN_FILE = path.join(CONFIG_DIR, 'access-token.json');
@@ -41,4 +42,16 @@ export function getAccessToken(): string | null {
 
 export function hasAccessToken(): boolean {
   return getAccessToken() !== null;
+}
+
+export function getCachedTransactions(month: string): TransactionData | null {
+  throw new Error('Not implemented');
+}
+
+export function setCachedTransactions(month: string, data: TransactionData): void {
+  throw new Error('Not implemented');
+}
+
+export function cleanupOldCache(): void {
+  throw new Error('Not implemented');
 }

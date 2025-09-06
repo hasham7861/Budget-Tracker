@@ -10,14 +10,6 @@ app = typer.Typer(
     add_completion=False,
 )
 
-
-@app.command()
-def hello() -> None:
-    """A simple hello command to test the CLI setup."""
-    typer.echo("Hello from Budget Tracker! 🏦")
-    typer.echo("Your Python CLI is working! Now you can start building...")
-
-
 @app.command()
 def link() -> None:
     """Link your RBC bank account (placeholder for now)."""

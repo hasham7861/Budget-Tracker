@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "budget-tracker"
+version = "1.0.0"
+description = "A CLI tool for tracking budget via Plaid API"
+authors = [{name = "Your Name", email = "your.email@example.com"}]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+# Basic dependencies - you can add more as you learn!
+dependencies = [
+    "typer[all]>=0.9.0",      # CLI framework with rich output
+    "python-dotenv>=1.0.0",   # Environment variable management
+]
+
+# Optional dependencies for when you're ready to add them
+[project.optional-dependencies]
+plaid = ["plaid-python>=9.0.0"]
+validation = ["pydantic>=2.0.0"]
+http = ["httpx>=0.24.0"]
+dev = [
+    "black>=23.0.0",          # Code formatter
+    "isort>=5.12.0",          # Import sorter
+    "mypy>=1.0.0",            # Type checker
+    "pytest>=7.0.0",          # Testing framework
+]
+
+[project.scripts]
+budget-tracker = "budget_tracker.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/Budget-Tracker"
+Repository = "https://github.com/yourusername/Budget-Tracker"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

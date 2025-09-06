@@ -11,4 +11,4 @@ def link_account() -> None:
     """Link RBC bank account via Plaid."""
     plaid_client = PlaidClient()
     link_token = plaid_client.create_link_token()
-    typer.echo(f"Link token: {link_token['link_token']}")
+    typer.echo(f"Public link token: {link_token['link_token']}")

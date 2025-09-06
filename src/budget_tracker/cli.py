@@ -16,9 +16,8 @@ app = typer.Typer(
 
 @app.command()
 def link() -> None:
-    """Link your RBC bank account (placeholder for now)."""
-    typer.echo("🔗 Link command - Coming soon!")
-    typer.echo("This will connect to your RBC account via Plaid.")
+    """Link your RBC bank account (placeholder for now).""" 
+    typer.echo("This will create public token for account linking.")
     link_account()
 
 

@@ -3,7 +3,12 @@
 # TODO: Implement the link functionality
 # This will create a Plaid link token and provide the URL for account linking
 
+from budget_tracker.services.plaid_client import PlaidClient
+import typer
+
+
 def link_account() -> None:
     """Link RBC bank account via Plaid."""
-    print("🔗 Link functionality - implement me!")
-    # Your implementation goes here
+    plaid_client = PlaidClient()
+    link_token = plaid_client.create_link_token()
+    typer.echo(f"Link token: {link_token['link_token']}")

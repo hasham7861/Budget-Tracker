@@ -25,11 +25,11 @@ classifiers = [
 dependencies = [
     "typer[all]>=0.9.0",      # CLI framework with rich output
     "python-dotenv>=1.0.0",   # Environment variable management
+    "plaid-python>=9.0.0",    # Plaid API integration
 ]
 
 # Optional dependencies for when you're ready to add them
 [project.optional-dependencies]
-plaid = ["plaid-python>=9.0.0"]
 validation = ["pydantic>=2.0.0"]
 http = ["httpx>=0.24.0"]
 dev = [

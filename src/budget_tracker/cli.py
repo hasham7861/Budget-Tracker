@@ -2,6 +2,10 @@
 
 import typer
 from typing import Optional
+from budget_tracker.commands.link import link_account
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Create the main CLI app
 app = typer.Typer(
@@ -15,6 +19,7 @@ def link() -> None:
     """Link your RBC bank account (placeholder for now)."""
     typer.echo("🔗 Link command - Coming soon!")
     typer.echo("This will connect to your RBC account via Plaid.")
+    link_account()
 
 
 @app.command()

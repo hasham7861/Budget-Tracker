@@ -1,12 +1,12 @@
 # Budget Tracker CLI
 
-A CLI tool for connecting to your RBC bank account via Plaid and pulling monthly statements.
+A Python CLI tool for connecting to your RBC bank account via Plaid and pulling monthly statements.
 
 ## Setup
 
-1. **Install dependencies:**
+1. **Create virtual environment and install:**
    ```bash
-   npm install
+   make setup
    ```
 
 2. **Configure Plaid API:**
@@ -16,16 +16,10 @@ A CLI tool for connecting to your RBC bank account via Plaid and pulling monthly
    
    Edit `.env` with your Plaid credentials from [Plaid Dashboard](https://dashboard.plaid.com/):
    ```env
-   PLAID_ENV=sandbox
    PLAID_CLIENT_ID=your_client_id_here
    PLAID_SECRET=your_secret_here
-   PLAID_PRODUCTS=transactions
-   PLAID_COUNTRY_CODES=CA
-   ```
-
-3. **Build the project:**
-   ```bash
-   npm run build
+   PLAID_PUBLIC_TOKEN_URL=https://secure.plaid.com/hl/
+   ACCOUNT_TO_FILTER=RBC ION+ Visa
    ```
 
 ## Usage Flow
@@ -33,45 +27,57 @@ A CLI tool for connecting to your RBC bank account via Plaid and pulling monthly
 ### Step 1: Link Your RBC Account
 
 ```bash
-npm run dev link
+budget-tracker link
+# or using make
+make run ARGS="link"
 ```
 
-This generates a Plaid Link URL like:
+This generates a Plaid Link URL and opens it in your browser:
 ```
 🔗 Link Token Created Successfully!
 Link Token: link-sandbox-abc123...
 
 📋 Next Steps:
 1. Go to: https://secure.plaid.com/hl/abc123...
+2. Select 'Royal Bank of Canada' from the institution list
+3. For SANDBOX testing, use these credentials:
+   Username: user_good
+   Password: pass_good
+4. Complete the linking process
+5. Copy the public_token from the browser network tab
+6. Use it with: budget-tracker exchange <public_token>
+
+🌐 Opening Plaid Link in your browser...
 ```
 
-### Step 2: Complete Account Linking
+### Step 2: Complete Account Linking in Browser
 
-1. **Open the provided URL** in your browser
+1. **Browser will open automatically** to the Plaid Link page
 2. **Select "Royal Bank of Canada"** from the institution list
 3. **Enter sandbox credentials:**
    - Username: `user_good`
    - Password: `pass_good`
-4. **Complete the linking process** by selecting accounts
+4. **Select your accounts** and complete the linking process
 
-### Step 3: Extract Public Token
+### Step 3: Extract Public Token from Network Tab
 
-After successful linking, you'll see a success page. To get the public token:
+**This is the critical step!** After successful linking:
 
-1. **Open browser DevTools** (F12 or right-click → Inspect)
-2. **Go to Network tab**
-3. **Look for network requests** during the success page load
-4. **Find the request** that returns a response containing `public_token`
-5. **Copy the public token** (starts with `public-sandbox-` or `public-development-`)
+1. **Keep browser DevTools open** (F12 or right-click → Inspect)
+2. **Go to Network tab** in DevTools
+3. **Complete the Plaid linking flow** 
+4. **Look through the network requests** (usually one of the last 2-3 requests)
+5. **Find a request with response containing `public_token`**
+6. **Copy the public token** (starts with `public-sandbox-` or `public-development-`)
 
-Alternative method:
-- Some success pages display the token directly in the URL or on the page
-- Look for a string like: `public-sandbox-abc123def456ghi789...`
+**Pro tip:** The public token is usually in a POST request response after you click "Continue" or "Done" in the Plaid interface.
 
-### Step 4: Exchange Public Token
+### Step 4: Exchange Public Token for Access Token
 
 ```bash
-npm run dev exchange public-sandbox-abc123def456ghi789...
+budget-tracker exchange public-sandbox-abc123def456ghi789...
+# or using make
+make run ARGS="exchange public-sandbox-abc123def456ghi789..."
 ```
 
 Expected output:
@@ -80,23 +86,20 @@ Exchanging public token...
 ✅ Success! Your RBC account is now linked and ready to use.
 Item ID: item-abc123...
 
-🎉 You can now pull your statements with: npm run dev pull
+🎉 You can now pull your statements with: budget-tracker pull
 ```
 
 ### Step 5: Pull Bank Statements
 
 ```bash
 # Pull current month statements
-npm run dev pull
+budget-tracker pull
 
-# Pull specific month
-npm run dev pull -m 2024-01
+# Pull specific month (YYYY-MM format)
+budget-tracker pull --month 2025-01
 
-# Get CSV format
-npm run dev pull -f csv
-
-# Specific month in CSV
-npm run dev pull -m 2024-01 -f csv
+# Using make (cleaner)
+make pull MONTH=2025-01
 ```
 
 Expected output:
@@ -134,11 +137,11 @@ Expected output:
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev link` | Generate Plaid Link URL for account connection |
-| `npm run dev exchange <token>` | Exchange public token for access token |
-| `npm run dev pull` | Pull current month's transactions |
-| `npm run dev pull -m YYYY-MM` | Pull specific month's transactions |
-| `npm run dev pull -f csv` | Output in CSV format |
+| `budget-tracker link` | Generate Plaid Link URL for account connection |
+| `budget-tracker exchange <token>` | Exchange public token for access token |
+| `budget-tracker pull` | Pull current month's transactions |
+| `budget-tracker pull --month YYYY-MM` | Pull specific month's transactions |
+| `make pull MONTH=YYYY-MM` | Cleaner way to pull specific month |
 
 ## Troubleshooting
 
@@ -162,15 +165,16 @@ Expected output:
 ## File Structure
 
 ```
-src/
-├── commands/
-│   ├── link.ts          # Account linking command
-│   └── pull.ts          # Statement pulling command
-├── services/
-│   └── plaid.ts         # Plaid API integration
-├── utils/
-│   └── storage.ts       # Token storage utilities
-└── index.ts             # CLI entry point
+src/budget_tracker/
+├── cli.py               # Main CLI entry point (Typer app)
+├── commands/            # Command implementations
+│   ├── link.py          # Account linking command
+│   ├── exchange.py      # Token exchange command
+│   └── pull.py          # Statement pulling command
+├── services/            # API clients
+│   └── plaid_client.py  # Plaid API integration
+└── utils/               # Utilities
+    └── storage.py       # Token storage utilities
 ```
 
 ## Security Notes

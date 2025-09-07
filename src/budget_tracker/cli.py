@@ -3,7 +3,10 @@
 import typer
 from typing import Optional
 from budget_tracker.commands.link import link_account
+from budget_tracker.commands.exchange import exchange_public_token
+from budget_tracker.commands.pull import pull_statements
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -16,16 +19,15 @@ app = typer.Typer(
 
 @app.command()
 def link() -> None:
-    """Link your RBC bank account (placeholder for now).""" 
+    """Link your RBC bank account.""" 
     typer.echo("This will create public token for account linking.")
     link_account()
 
 
 @app.command()
 def exchange(public_token: str) -> None:
-    """Exchange public token for access token (placeholder for now)."""
-    typer.echo(f"🔄 Exchange command - Coming soon!")
-    typer.echo(f"Public token received: {public_token[:20]}...")
+    """Exchange public token for access token."""
+    exchange_public_token(public_token)
 
 
 @app.command()
@@ -47,6 +49,14 @@ def pull(
     typer.echo(f"📊 Pull command - Coming soon!")
     typer.echo(f"Month: {month or 'current'}")
     typer.echo(f"Format: {format}")
+
+    if month:
+        year, month = month.split('-')
+    else:
+        year = datetime.now().year
+        month = datetime.now().month
+    
+    pull_statements(year, month, format)
 
 
 def main() -> None:

@@ -9,7 +9,10 @@ setup: ## Create virtual environment and install
 	$(VENV_BIN)/pip install --force-reinstall -e .
 
 run: ## Run the CLI with any arguments
-	$(VENV_BIN)/budget-tracker $(filter-out $@,$(MAKECMDGOALS))
+	@$(VENV_BIN)/budget-tracker $(ARGS)
+
+pull: ## Pull transactions (usage: make pull MONTH=2025-08)
+	@$(VENV_BIN)/budget-tracker pull --month $(MONTH)
 
 hello: ## Test the hello command
 	$(VENV_BIN)/budget-tracker hello

@@ -16,8 +16,6 @@ from plaid.model.transaction import Transaction
 from typing import Dict, Any
 load_dotenv()
 
-# TODO: Implement Plaid API integration
-# This will handle all Plaid API calls (create link token, exchange token, get transactions, etc.)
 
 configuration = plaid.Configuration(
     host=plaid.Environment.Production,

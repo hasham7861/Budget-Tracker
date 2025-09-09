@@ -1,15 +1,14 @@
 """Storage utilities for tokens and data."""
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 import json
 import os
+import orjson
 
-# TODO: Implement storage functionality
-# This will handle saving/loading access tokens and caching data
-
-CONFIG_DIR = Path.home() / ".budget-tracker"
-ACCESS_TOKEN_FILE = CONFIG_DIR / "access-token.json"
+CONFIG_DIR = Path.home()
+ACCESS_TOKEN_FILE = CONFIG_DIR / ".budget-tracker" / "access-token.json"
+CACHE_DIR = CONFIG_DIR / "desktop" / "budget-tracker"
 
 
 def save_access_token(access_token: str, item_id: str) -> None:
@@ -43,3 +42,36 @@ def get_access_token() -> Optional[str]:
 def has_access_token() -> bool:
     """Check if access token exists."""
     return get_access_token() is not None
+
+def get_cached_transactions(accountName: str, year: str, month: str) -> Optional[list[Dict[str, Any]]]:
+    """Get cached transactions from local storage."""
+    
+    CACHE_DIR.mkdir(exist_ok=True)
+    cache_file = CACHE_DIR / f"transactions_{accountName}_{year}_{month}.json"
+    
+    if not os.path.exists(cache_file):
+        return None
+    
+    # Check if file is empty (corrupt cache)
+    if os.path.getsize(cache_file) == 0:
+        print(f"⚠️  Empty cache file found, removing: {cache_file}")
+        os.remove(cache_file)
+        return None
+    
+    print(f"Getting transactions for cache: {accountName} from {year}-{month}")
+
+    try:
+        with open(cache_file, 'rb') as f:
+            return orjson.loads(f.read())
+    except orjson.JSONDecodeError:
+        print(f"⚠️  Corrupt cache file found, removing: {cache_file}")
+        os.remove(cache_file)
+        return None
+
+def save_cached_transactions(accountName: str, year: str, month: str, transactions: list[Dict[str, Any]]) -> None:
+    """Save cached transactions to local storage."""
+
+    CACHE_DIR.mkdir(exist_ok=True)
+    with open(CACHE_DIR / f"transactions_{accountName}_{year}_{month}.json", 'wb') as f:
+        f.write(orjson.dumps(transactions, option=orjson.OPT_INDENT_2))
+    

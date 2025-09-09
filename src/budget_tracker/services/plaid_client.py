@@ -12,6 +12,7 @@ from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUse
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
 from plaid.model.accounts_get_request import AccountsGetRequest
 from plaid.model.transactions_get_request import TransactionsGetRequest
+from typing import Dict, Any
 load_dotenv()
 
 # TODO: Implement Plaid API integration
@@ -71,7 +72,7 @@ class PlaidClient:
         accounts = response['accounts']
         return accounts
     
-    def get_transactions(self, access_token: str, account_id: str, year: str, month: str) -> list:
+    def get_transactions(self, access_token: str, account_id: str, year: str, month: str) -> list[Dict[str, Any]]:
         """Get transactions for a date range."""
         
         # Convert strings to date objects
@@ -91,6 +92,6 @@ class PlaidClient:
         response = self.client.transactions_get(request)
         all_transactions = response['transactions']
         
-        # Filter transactions by account_id
-        filtered_transactions = [tx for tx in all_transactions if tx['account_id'] == account_id]
+        # Filter transactions by account_id and convert Transaction objects to list of dictionaries
+        filtered_transactions = [tx.to_dict() for tx in all_transactions if tx.account_id == account_id]
         return filtered_transactions

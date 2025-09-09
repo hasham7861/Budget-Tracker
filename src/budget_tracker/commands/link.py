@@ -1,7 +1,6 @@
 """Link bank account command."""
 
 import typer
-import os
 import webbrowser
 from budget_tracker.services.plaid_client import PlaidClient
 

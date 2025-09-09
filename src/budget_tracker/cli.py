@@ -10,7 +10,6 @@ from datetime import datetime
 
 load_dotenv()
 
-# Create the main CLI app
 app = typer.Typer(
     name="budget-tracker",
     help="Budget Tracker CLI - Connect to RBC via Plaid API",

@@ -94,7 +94,6 @@ class PlaidClient:
         response = self.client.transactions_get(request)
         all_transactions = response["transactions"]
 
-        # Filter transactions by account_id and convert Transaction objects to list of dictionaries
         filtered_transactions = [
             tx for tx in all_transactions if tx.account_id == account_id
         ]

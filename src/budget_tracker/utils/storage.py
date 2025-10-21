@@ -114,7 +114,7 @@ def save_cached_transactions_csv(
                         ]
                     )
             elif key == "totalTransactionsCountByCategory":
-                continue  # skip this key as it is already in the totalSpendingByCategory
+                continue  # skip this key as it is already in totalSpendingByCategory
             else:
                 writer.writerow([key, value])
 

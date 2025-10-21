@@ -29,13 +29,47 @@ def pull_statements(year: Optional[str] = None, month: Optional[str] = None, for
         transactions = [tx.to_dict() for tx in transactions]
         save_cached_transactions(accountFindByName['name'], year, month, transactions)
 
-        transactionsPartialData= [{'date': tx['date'], 'description': tx['name'], 'amount': tx['amount'], 'category': tx['personal_finance_category']['primary'], 'subcategory': tx['personal_finance_category']['detailed'], 'category_confidence': tx['personal_finance_category']['confidence_level']} for tx in transactions if tx['amount'] > 0]
+        transactionsPartialData = []
+        for tx in transactions:
+            if tx and tx.get('amount', 0) > 0:
+                pfc = tx.get('personal_finance_category') or {}
+                transactionsPartialData.append({
+                    'date': tx['date'],
+                    'description': tx['name'],
+                    'amount': tx['amount'],
+                    'category': pfc.get('primary', 'Unknown'),
+                    'subcategory': pfc.get('detailed', 'Unknown'),
+                    'category_confidence': pfc.get('confidence_level', 'Unknown')
+                })
         
+        categories = set(tx['category'] for tx in transactionsPartialData)
         summaryData = {
-            'totalSpending': sum(transaction['amount'] for transaction in transactions if transaction['amount'] > 0),
+            'totalSpending': sum(
+                transaction['amount']
+                for transaction in transactions
+                if transaction and transaction.get('amount', 0) > 0
+            ),
             'transactionCount': len(transactions),
-            'totalSpendingByCategory': {category: sum(transaction['amount'] for transaction in transactions if transaction['amount'] > 0 and transaction['personal_finance_category']['primary'] == category) for category in set(tx['category'] for tx in transactionsPartialData)},
-            'totalTransactionsCountByCategory': {category: sum(1 for transaction in transactions if transaction['amount'] > 0 and transaction['personal_finance_category']['primary'] == category) for category in set(tx['category'] for tx in transactionsPartialData)}
+            'totalSpendingByCategory': {
+                category: sum(
+                    transaction['amount']
+                    for transaction in transactions
+                    if transaction and transaction.get('amount', 0) > 0
+                    and (transaction.get('personal_finance_category') or {})
+                    .get('primary') == category
+                )
+                for category in categories
+            },
+            'totalTransactionsCountByCategory': {
+                category: sum(
+                    1
+                    for transaction in transactions
+                    if transaction and transaction.get('amount', 0) > 0
+                    and (transaction.get('personal_finance_category') or {})
+                    .get('primary') == category
+                )
+                for category in categories
+            }
         }
 
         save_cached_transactions_csv(accountFindByName['name'], year, month, transactionsPartialData, summaryData)

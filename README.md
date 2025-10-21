@@ -4,9 +4,9 @@ A Python CLI tool for connecting to your RBC bank account via Plaid and pulling 
 
 ## Setup
 
-1. **Create virtual environment and install:**
+1. **Install dependencies with Poetry:**
    ```bash
-   make setup
+   poetry install
    ```
 
 2. **Configure Plaid API:**
@@ -27,9 +27,7 @@ A Python CLI tool for connecting to your RBC bank account via Plaid and pulling 
 ### Step 1: Link Your RBC Account
 
 ```bash
-budget-tracker link
-# or using make
-make run ARGS="link"
+poetry run budget-tracker link
 ```
 
 This generates a Plaid Link URL and opens it in your browser:
@@ -75,9 +73,7 @@ Link Token: link-sandbox-abc123...
 ### Step 4: Exchange Public Token for Access Token
 
 ```bash
-budget-tracker exchange public-sandbox-abc123def456ghi789...
-# or using make
-make run ARGS="exchange public-sandbox-abc123def456ghi789..."
+poetry run budget-tracker exchange public-sandbox-abc123def456ghi789...
 ```
 
 Expected output:
@@ -93,13 +89,10 @@ Item ID: item-abc123...
 
 ```bash
 # Pull current month statements
-budget-tracker pull
+poetry run budget-tracker pull
 
 # Pull specific month (YYYY-MM format)
-budget-tracker pull --month 2025-01
-
-# Using make (cleaner)
-make pull MONTH=2025-01
+poetry run budget-tracker pull --month 2025-01
 ```
 
 Expected output:
@@ -137,11 +130,11 @@ Expected output:
 
 | Command | Description |
 |---------|-------------|
-| `budget-tracker link` | Generate Plaid Link URL for account connection |
-| `budget-tracker exchange <token>` | Exchange public token for access token |
-| `budget-tracker pull` | Pull current month's transactions |
-| `budget-tracker pull --month YYYY-MM` | Pull specific month's transactions |
-| `make pull MONTH=YYYY-MM` | Cleaner way to pull specific month |
+| `poetry run budget-tracker link` | Generate Plaid Link URL for account connection |
+| `poetry run budget-tracker exchange <token>` | Exchange public token for access token |
+| `poetry run budget-tracker pull` | Pull current month's transactions |
+| `poetry run budget-tracker pull --month YYYY-MM` | Pull specific month's transactions |
+| `poetry shell` | Activate virtual environment (then run commands without `poetry run`) |
 
 ## Troubleshooting
 

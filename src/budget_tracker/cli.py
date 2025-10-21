@@ -45,7 +45,6 @@ def pull(
     ),
 ) -> None:
     """Pull monthly statements (placeholder for now)."""
-    typer.echo(f"📊 Pull command - Coming soon!")
     typer.echo(f"Month: {month or 'current'}")
     typer.echo(f"Format: {format}")
 

@@ -1,96 +1,101 @@
 """Plaid API client implementation."""
 import os
-from dotenv import load_dotenv
 import uuid
-import plaid
 from datetime import date
+
+import plaid
+from dotenv import load_dotenv
 from plaid.api import plaid_api
-from plaid.model.link_token_create_request import LinkTokenCreateRequest
-from plaid.model.products import Products
-from plaid.model.country_code import CountryCode
-from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
-from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
 from plaid.model.accounts_get_request import AccountsGetRequest
-from plaid.model.transactions_get_request import TransactionsGetRequest
+from plaid.model.country_code import CountryCode
+from plaid.model.item_public_token_exchange_request import (
+    ItemPublicTokenExchangeRequest,
+)
+from plaid.model.link_token_create_request import LinkTokenCreateRequest
+from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+from plaid.model.products import Products
 from plaid.model.transaction import Transaction
-from typing import Dict, Any
+from plaid.model.transactions_get_request import TransactionsGetRequest
+
 load_dotenv()
 
 
 configuration = plaid.Configuration(
     host=plaid.Environment.Production,
     api_key={
-        'clientId': os.getenv('PLAID_CLIENT_ID'),
-        'secret': os.getenv('PLAID_SECRET'),
-    }
+        "clientId": os.getenv("PLAID_CLIENT_ID"),
+        "secret": os.getenv("PLAID_SECRET"),
+    },
 )
+
 
 class PlaidClient:
     """Plaid API client for banking operations."""
-    
+
     def __init__(self) -> None:
         """Initialize the Plaid client."""
         api_client = plaid.ApiClient(configuration)
         self.client = plaid_api.PlaidApi(api_client)
-        
-    
+
     def create_link_token(self) -> dict:
         """Create a link token for account linking."""
         request = LinkTokenCreateRequest(
             user=LinkTokenCreateRequestUser(
                 client_user_id=str(uuid.uuid4()),
             ),
-            client_name='Budget Tracker',
-            products=[Products('transactions')],
-            country_codes=[CountryCode('CA')],
-            language='en',
+            client_name="Budget Tracker",
+            products=[Products("transactions")],
+            country_codes=[CountryCode("CA")],
+            language="en",
         )
         response = self.client.link_token_create(request)
-        link_token = response['link_token']
+        link_token = response["link_token"]
         return {
-            'link_token': link_token,
-            'hosted_link_url': f"{os.getenv('PLAID_PUBLIC_TOKEN_URL')}{link_token}",
+            "link_token": link_token,
+            "hosted_link_url": f"{os.getenv('PLAID_PUBLIC_TOKEN_URL')}{link_token}",
         }
-    
+
     def exchange_public_token(self, public_token: str) -> dict:
         """Exchange public token for access token."""
         request = ItemPublicTokenExchangeRequest(public_token=public_token)
         response = self.client.item_public_token_exchange(request)
-        access_token = response['access_token']
+        access_token = response["access_token"]
         print(f"Access token: {access_token}")
-        item_id = response['item_id']
+        item_id = response["item_id"]
         return {
-            'access_token': access_token,
-            'item_id': item_id,
+            "access_token": access_token,
+            "item_id": item_id,
         }
-    
+
     def get_accounts(self, access_token: str) -> list:
         """Get account information."""
         request = AccountsGetRequest(access_token=access_token)
         response = self.client.accounts_get(request)
-        accounts = response['accounts']
+        accounts = response["accounts"]
         return accounts
-    
-    def get_transactions(self, access_token: str, account_id: str, year: str, month: str) -> list[Transaction]:
+
+    def get_transactions(
+        self, access_token: str, account_id: str, year: str, month: str
+    ) -> list[Transaction]:
         """Get transactions for a date range."""
-        
+
         # Convert strings to date objects
         start_date = date(int(year), int(month), 1)
-        
+
         # Get last day of month
         if int(month) == 12:
             end_date = date(int(year) + 1, 1, 1) - date.resolution
         else:
             end_date = date(int(year), int(month) + 1, 1) - date.resolution
-        
+
         request = TransactionsGetRequest(
-            access_token=access_token, 
-            start_date=start_date, 
-            end_date=end_date
+            access_token=access_token, start_date=start_date, end_date=end_date
         )
         response = self.client.transactions_get(request)
-        all_transactions = response['transactions']
-        
+        all_transactions = response["transactions"]
+
         # Filter transactions by account_id and convert Transaction objects to list of dictionaries
-        filtered_transactions = [tx for tx in all_transactions if tx.account_id == account_id]
+        filtered_transactions = [
+            tx for tx in all_transactions if tx.account_id == account_id
+        ]
         return filtered_transactions

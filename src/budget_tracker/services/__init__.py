@@ -2,4 +2,4 @@
 
 from .plaid_client import PlaidClient
 
-__all__ = ['PlaidClient']
+__all__ = ["PlaidClient"]

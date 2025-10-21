@@ -1,12 +1,14 @@
 """Main CLI entry point for Budget Tracker."""
 
-import typer
-from typing import Optional
-from budget_tracker.commands.link import link_account
-from budget_tracker.commands.exchange import exchange_public_token
-from budget_tracker.commands.pull import pull_statements
-from dotenv import load_dotenv
 from datetime import datetime
+from typing import Optional
+
+import typer
+from dotenv import load_dotenv
+
+from budget_tracker.commands.exchange import exchange_public_token
+from budget_tracker.commands.link import link_account
+from budget_tracker.commands.pull import pull_statements
 
 load_dotenv()
 
@@ -16,9 +18,10 @@ app = typer.Typer(
     add_completion=False,
 )
 
+
 @app.command()
 def link() -> None:
-    """Link your RBC bank account.""" 
+    """Link your RBC bank account."""
     typer.echo("This will create public token for account linking.")
     link_account()
 
@@ -32,16 +35,10 @@ def exchange(public_token: str) -> None:
 @app.command()
 def pull(
     month: Optional[str] = typer.Option(
-        None, 
-        "--month", 
-        "-m", 
-        help="Month to pull (YYYY-MM format)"
+        None, "--month", "-m", help="Month to pull (YYYY-MM format)"
     ),
     format: str = typer.Option(
-        "json", 
-        "--format", 
-        "-f", 
-        help="Output format (json or csv)"
+        "json", "--format", "-f", help="Output format (json or csv)"
     ),
 ) -> None:
     """Pull monthly statements (placeholder for now)."""
@@ -49,11 +46,11 @@ def pull(
     typer.echo(f"Format: {format}")
 
     if month:
-        year, month = month.split('-')
+        year, month = month.split("-")
     else:
         year = datetime.now().year
         month = datetime.now().month
-    
+
     pull_statements(year, month, format)
 
 

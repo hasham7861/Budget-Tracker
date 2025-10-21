@@ -170,6 +170,24 @@ src/budget_tracker/
     └── storage.py       # Token storage utilities
 ```
 
+## Development
+
+### Linting and Formatting
+
+```bash
+# Run linting
+poetry run ruff check .
+
+# Auto-fix linting issues
+poetry run ruff check --fix .
+
+# Format code
+poetry run ruff format .
+
+# Type checking
+poetry run mypy src/
+```
+
 ## Security Notes
 
 - Access tokens are stored locally in `~/.budget-tracker/`

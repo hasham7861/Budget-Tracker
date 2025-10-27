@@ -8,11 +8,13 @@ license = "MIT"
 packages = [{include = "budget_tracker", from = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.14"
 typer = {extras = ["all"], version = "^0.9.0"}
 python-dotenv = "^1.0.0"
 plaid-python = "^9.0.0"
 orjson = "^3.11.3"
+uvicorn = {extras = ["standard"], version = "^0.38.0"}
+fastapi = "^0.120.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.0"
@@ -21,6 +23,7 @@ pytest = "^7.0.0"
 
 [tool.poetry.scripts]
 budget-tracker = "budget_tracker.cli:main"
+api-start = "budget_tracker_api.app.main:start"
 
 [build-system]
 requires = ["poetry-core"]

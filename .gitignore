@@ -3,6 +3,14 @@ node_modules/*
 .env
 .DS_Store
 
+# Frontend build artifacts
+src/budget_tracker_api/app/public/assets/
+src/budget_tracker_api/app/public/index.html
+src/budget_tracker_api/app/public/*.js
+src/budget_tracker_api/app/public/*.css
+src/budget_tracker_api/app/public/vite.svg
+.frontend-build.log
+
 # Python
 venv/
 __pycache__/

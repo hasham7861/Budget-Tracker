@@ -170,6 +170,79 @@ src/budget_tracker/
     └── storage.py       # Token storage utilities
 ```
 
+## Frontend Development
+
+The Budget Tracker includes a React-based web interface served through FastAPI.
+
+### Initial Setup
+
+```bash
+# Install frontend dependencies
+cd src/budget_tracker_api/frontend
+npm install
+```
+
+### Development Workflow
+
+**Option 1: Auto-Rebuild Mode (Recommended - Single Command)**
+```bash
+./dev.sh
+# Automatically rebuilds frontend on file changes and serves via FastAPI
+# Visit http://localhost:8000
+```
+
+This script:
+- Does an initial frontend build
+- Starts frontend build in watch mode (auto-rebuilds on changes)
+- Starts FastAPI server
+- Press Ctrl+C to stop both
+
+**Option 2: Manual Build Mode**
+```bash
+# Build the frontend once
+cd src/budget_tracker_api/frontend
+npm run build
+
+# Start the API server (serves built React app)
+cd ../../..
+poetry run api-start
+
+# Visit http://localhost:8000
+# (Rebuild manually after frontend changes)
+```
+
+**Option 3: Vite Dev Server (Fastest Hot Reload)**
+
+Open two terminal windows:
+
+Terminal 1 - FastAPI Backend:
+```bash
+poetry run api-start
+# Runs on http://localhost:8000
+```
+
+Terminal 2 - Vite Dev Server:
+```bash
+cd src/budget_tracker_api/frontend
+npm run dev
+# Runs on http://localhost:5173 with instant hot module reloading
+# API requests are proxied to port 8000
+```
+
+With this setup, visit `http://localhost:5173` for the fastest feedback loop.
+
+### Frontend Scripts
+
+From `src/budget_tracker_api/frontend/`:
+
+| Command | Description |
+|---------|-------------|
+| `npm install` | Install dependencies |
+| `npm run dev` | Start Vite dev server (port 5173) |
+| `npm run build` | Build production bundle to `../app/public/` |
+| `npm run build:watch` | Build in watch mode (auto-rebuilds on changes) |
+| `npm run preview` | Preview production build locally |
+
 ## Development
 
 ### Linting and Formatting

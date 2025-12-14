@@ -24,6 +24,7 @@ pytest = "^7.0.0"
 [tool.poetry.scripts]
 budget-tracker = "budget_tracker.cli:main"
 api-start = "budget_tracker_api.app.main:start"
+dev = "budget_tracker_api.dev:start"
 
 [build-system]
 requires = ["poetry-core"]

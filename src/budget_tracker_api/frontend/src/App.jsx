@@ -27,21 +27,38 @@ function App() {
       </header>
 
       <main className="app-main">
-        <div className="api-status">
-          <h2>API Status</h2>
-          {loading ? (
-            <p>Checking connection...</p>
-          ) : status ? (
-            <p className="status-ok">✓ {status.status}</p>
-          ) : (
-            <p className="status-error">✗ Failed to connect</p>
-          )}
-        </div>
+        {loading ? (
+          <p>Loading...</p>
+        ) : status ? (
+          <div className="transactions-table">
+            <h2>Transactions for December</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Transaction Name</th>
+                  <th>Spend Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Groceries</td>
+                  <td>$45.50</td>
+                </tr>
+                <tr>
+                  <td>Gas</td>
+                  <td>$32.00</td>
+                </tr>
+                <tr>
+                  <td>Coffee</td>
+                  <td>$5.25</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>Error connecting to the API. Please try again later.</p>
+        )}
 
-        <div className="content">
-          <p>Welcome to your Budget Tracker application.</p>
-          <p>Start building your financial dashboard here!</p>
-        </div>
       </main>
     </div>
   );

@@ -17,6 +17,15 @@ function App() {
         console.error('API Error:', err);
         setLoading(false);
       });
+
+      fetch('/api/transactions')
+        .then(res => res.json())
+        .then(data => {
+          console.log('Transactions:', data);
+        })
+        .catch(err => {
+          console.error('Transactions API Error:', err);
+        });
   }, []);
 
   return (

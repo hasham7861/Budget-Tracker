@@ -3,6 +3,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
+from budget_tracker.services import PlaidClient
+from budget_tracker.commands import pull_statements
 
 app = FastAPI(title="Budget Tracker APP")
 
@@ -10,15 +12,21 @@ app = FastAPI(title="Budget Tracker APP")
 BASE_DIR = Path(__file__).resolve().parent
 PUBLIC_DIR = BASE_DIR / "public"
 
+plaid_client = PlaidClient()
+
 # API Routes (must be defined BEFORE static file mounting)
 @app.get("/api/status")
 def hello_api():
     return {"status": "api is working"}
 
 # Add more API routes here
-# @app.get("/api/transactions")
-# def get_transactions():
-#     return {"transactions": []}
+@app.get("/api/transactions")
+def get_transactions():
+    """
+    - get list of transactions from plaid api to return data as is for now.
+    """  
+    statements = pull_statements("2025", "12", format="json")
+    return {"transactions": statements}
 
 # Mount static files (JS, CSS, images)
 # This serves files from /public/assets/* as /assets/*
@@ -49,7 +57,6 @@ def serve_react_app(full_path: str):
 
     # Fallback if build doesn't exist yet
     return {"error": "Frontend not built. Run: cd src/budget_tracker_api/frontend && npm run build"}
-
 
 def start():
     """Entry point for poetry script"""

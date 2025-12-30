@@ -20,8 +20,19 @@ from plaid.model.transactions_get_request import TransactionsGetRequest
 load_dotenv()
 
 
+def get_plaid_environment():
+    """Get Plaid environment based on PLAID_ENV setting."""
+    env = os.getenv("PLAID_ENV", "sandbox").lower()
+    if env == "production":
+        return plaid.Environment.Production
+    elif env == "development":
+        return plaid.Environment.Development
+    else:
+        return plaid.Environment.Sandbox
+
+
 configuration = plaid.Configuration(
-    host=plaid.Environment.Production,
+    host=get_plaid_environment(),
     api_key={
         "clientId": os.getenv("PLAID_CLIENT_ID"),
         "secret": os.getenv("PLAID_SECRET"),
@@ -37,23 +48,34 @@ class PlaidClient:
         api_client = plaid.ApiClient(configuration)
         self.client = plaid_api.PlaidApi(api_client)
 
-    def create_link_token(self) -> dict:
+    def create_link_token(self, redirect_uri: str = None) -> dict:
         """Create a link token for account linking."""
-        request = LinkTokenCreateRequest(
-            user=LinkTokenCreateRequestUser(
+        request_params = {
+            "user": LinkTokenCreateRequestUser(
                 client_user_id=str(uuid.uuid4()),
             ),
-            client_name="Budget Tracker",
-            products=[Products("transactions")],
-            country_codes=[CountryCode("CA")],
-            language="en",
-        )
+            "client_name": "Budget Tracker",
+            "products": [Products("transactions")],
+            "country_codes": [CountryCode("CA")],
+            "language": "en",
+        }
+
+        # Add redirect_uri if provided
+        if redirect_uri:
+            request_params["redirect_uri"] = redirect_uri
+
+        request = LinkTokenCreateRequest(**request_params)
         response = self.client.link_token_create(request)
         link_token = response["link_token"]
-        return {
+        result = {
             "link_token": link_token,
-            "hosted_link_url": f"{os.getenv('PLAID_PUBLIC_TOKEN_URL')}{link_token}",
         }
+
+        # Only add hosted_link_url if we have the env var and redirect_uri
+        if redirect_uri and os.getenv('PLAID_PUBLIC_TOKEN_URL'):
+            result["hosted_link_url"] = f"{os.getenv('PLAID_PUBLIC_TOKEN_URL')}{link_token}"
+
+        return result
 
     def exchange_public_token(self, public_token: str) -> dict:
         """Exchange public token for access token."""

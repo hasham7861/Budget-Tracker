@@ -8,14 +8,17 @@ from typing import Any, Dict, Optional
 
 import orjson
 
-CONFIG_DIR = Path.home()
-ACCESS_TOKEN_FILE = CONFIG_DIR / ".budget-tracker" / "access-token.json"
-CACHE_DIR = CONFIG_DIR / "desktop" / "budget-tracker"
+# Use local .data directory in the project root
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+DATA_DIR = PROJECT_ROOT / ".data"
+ACCESS_TOKEN_FILE = DATA_DIR / "access-token.json"
+CACHE_DIR = DATA_DIR / "transactions"
 
 
 def save_access_token(access_token: str, item_id: str) -> None:
     """Save access token to local storage."""
-    CONFIG_DIR.mkdir(exist_ok=True)
+    # Create the .budget-tracker directory if it doesn't exist
+    ACCESS_TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     data = {"access_token": access_token, "item_id": item_id}
 
@@ -48,7 +51,7 @@ def get_cached_transactions(
 ) -> Optional[list[Dict[str, Any]]]:
     """Get cached transactions from local storage."""
 
-    CACHE_DIR.mkdir(exist_ok=True)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_file = CACHE_DIR / f"transactions_{accountName}_{year}_{month}.json"
 
     if not os.path.exists(cache_file):
@@ -79,7 +82,7 @@ def save_cached_transactions(
     if not transactions:
         return
 
-    CACHE_DIR.mkdir(exist_ok=True)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
     with open(CACHE_DIR / f"transactions_{accountName}_{year}_{month}.json", "wb") as f:
         f.write(orjson.dumps(transactions, option=orjson.OPT_INDENT_2))
 
@@ -95,7 +98,7 @@ def save_cached_transactions_csv(
     if not transactions:
         return
 
-    CACHE_DIR.mkdir(exist_ok=True)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
     with open(CACHE_DIR / f"transactions_{accountName}_{year}_{month}.csv", "w") as f:
         writer = csv.writer(f)
 
@@ -131,7 +134,7 @@ def get_cached_transactions_csv(
 ) -> Optional[list[Dict[str, Any]]]:
     """Get cached transactions from local storage as CSV."""
 
-    CACHE_DIR.mkdir(exist_ok=True)
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_file = CACHE_DIR / f"transactions_{accountName}_{year}_{month}.csv"
 
     if not os.path.exists(cache_file):

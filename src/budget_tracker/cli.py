@@ -6,6 +6,7 @@ from typing import Optional
 import typer
 from dotenv import load_dotenv
 
+from budget_tracker.commands.accounts import list_accounts
 from budget_tracker.commands.exchange import exchange_public_token
 from budget_tracker.commands.link import link_account
 from budget_tracker.commands.pull import pull_statements
@@ -30,6 +31,12 @@ def link() -> None:
 def exchange(public_token: str) -> None:
     """Exchange public token for access token."""
     exchange_public_token(public_token)
+
+
+@app.command()
+def accounts() -> None:
+    """List all linked bank accounts."""
+    list_accounts()
 
 
 @app.command()

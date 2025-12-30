@@ -109,3 +109,5 @@ def pull_statements(
         if transaction["amount"] > 0
     )
     print(f"Total spending: {totalSpending}")
+    
+    return transactions

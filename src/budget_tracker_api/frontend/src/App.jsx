@@ -1,32 +1,10 @@
-import { useState, useEffect } from 'react';
 import './App.css';
+import { useGetTransactions } from '../hooks/useGetTransactions';
 
 function App() {
-  const [status, setStatus] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Test API connection
-    fetch('/api/status')
-      .then(res => res.json())
-      .then(data => {
-        setStatus(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('API Error:', err);
-        setLoading(false);
-      });
-
-      fetch('/api/transactions')
-        .then(res => res.json())
-        .then(data => {
-          console.log('Transactions:', data);
-        })
-        .catch(err => {
-          console.error('Transactions API Error:', err);
-        });
-  }, []);
+  const {transactions, transactionsIsLoading, transactionsIsErrored} = useGetTransactions();
+  console.log(transactions)
 
   return (
     <div className="app">
@@ -36,9 +14,9 @@ function App() {
       </header>
 
       <main className="app-main">
-        {loading ? (
+        {transactionsIsLoading ? (
           <p>Loading...</p>
-        ) : status ? (
+        ) : (
           <div className="transactions-table">
             <h2>Transactions for December</h2>
             <table>
@@ -49,23 +27,16 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Groceries</td>
-                  <td>$45.50</td>
-                </tr>
-                <tr>
-                  <td>Gas</td>
-                  <td>$32.00</td>
-                </tr>
-                <tr>
-                  <td>Coffee</td>
-                  <td>$5.25</td>
-                </tr>
+                {!transactionsIsLoading && !transactionsIsErrored && transactions.map((transaction)=> (
+                  <tr key={transaction.id}>
+                    <td>{transaction.name}</td>
+                    <td>{transaction.amount}</td>
+                  </tr>
+                ))}
+
               </tbody>
             </table>
           </div>
-        ) : (
-          <p>Error connecting to the API. Please try again later.</p>
         )}
 
       </main>

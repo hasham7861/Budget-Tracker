@@ -5,6 +5,8 @@ node_modules/*
 
 # Local data directory (ignore all contents except .gitkeep)
 .data/**
+!.data/.gitkeep
+!.data/transactions/.gitkeep
 
 # Frontend build artifacts
 src/budget_tracker_api/app/public/assets/

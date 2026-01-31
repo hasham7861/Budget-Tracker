@@ -3,11 +3,15 @@ from pathlib import Path
 
 from budget_tracker_api.app.services.plaid_service import PlaidService
 from budget_tracker_api.app.services.transaction_service import TransactionService
+from budget_tracker_api.app.utils.database import init_db, save_note, get_note
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="Budget Tracker APP")
+
+# Initialize database on startup
+init_db()
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -81,6 +85,28 @@ def get_transactions(year: str = "2025", month: str = "12"):
     if error:
         raise HTTPException(status_code=status_code, detail=error)
     return {"transactions": transactions}
+
+
+@app.get("/api/notes")
+def get_notes(year: str, month: str):
+    """Get notes for a specific year and month."""
+    notes = get_note(year, month)
+    return {"notes": notes or ""}
+
+
+@app.post("/api/notes")
+async def save_notes(request: Request):
+    """Save notes for a specific year and month."""
+    data = await request.json()
+    year = data.get("year")
+    month = data.get("month")
+    notes = data.get("notes", "")
+
+    if not year or not month:
+        raise HTTPException(status_code=400, detail="year and month are required")
+
+    save_note(year, month, notes)
+    return {"success": True}
 
 # Mount static files (JS, CSS, images)
 # This serves files from /public/assets/* as /assets/*

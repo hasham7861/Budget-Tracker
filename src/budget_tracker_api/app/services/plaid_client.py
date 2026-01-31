@@ -16,7 +16,6 @@ from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUse
 from plaid.model.products import Products
 from plaid.model.transaction import Transaction
 from plaid.model.transactions_get_request import TransactionsGetRequest
-from plaid.model.link_token_create_request_update import LinkTokenCreateRequestUpdate
 
 load_dotenv()
 
@@ -49,7 +48,9 @@ class PlaidClient:
         api_client = plaid.ApiClient(configuration)
         self.client = plaid_api.PlaidApi(api_client)
 
-    def create_link_token(self, redirect_uri: str = None, access_token: str = None) -> dict:
+    def create_link_token(
+        self, redirect_uri: str = None, access_token: str = None
+    ) -> dict:
         """Create a link token for account linking or update mode."""
         request_params = {
             "user": LinkTokenCreateRequestUser(
@@ -79,8 +80,9 @@ class PlaidClient:
         }
 
         # Only add hosted_link_url if we have the env var and redirect_uri
-        if redirect_uri and os.getenv('PLAID_PUBLIC_TOKEN_URL'):
-            result["hosted_link_url"] = f"{os.getenv('PLAID_PUBLIC_TOKEN_URL')}{link_token}"
+        if redirect_uri and os.getenv("PLAID_PUBLIC_TOKEN_URL"):
+            public_token_url = os.getenv("PLAID_PUBLIC_TOKEN_URL")
+            result["hosted_link_url"] = f"{public_token_url}{link_token}"
 
         return result
 

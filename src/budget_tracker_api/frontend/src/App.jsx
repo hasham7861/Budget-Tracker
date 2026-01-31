@@ -35,6 +35,131 @@ function App() {
         return sum + (transaction.amount || 0);
     }, 0);
 
+    // Categorize transaction based on merchant name
+    const categorizeTransaction = (transaction) => {
+        if (transaction.personal_finance_category?.primary) {
+            return transaction.personal_finance_category.primary;
+        }
+
+        const name = transaction.name?.toLowerCase() || "";
+        const merchant = transaction.merchant_name?.toLowerCase() || "";
+
+        // Food & Dining
+        if (
+            name.includes("restaurant") ||
+            name.includes("food") ||
+            merchant.includes("tim hortons") ||
+            merchant.includes("uber eats") ||
+            merchant.includes("skipthedishes") ||
+            merchant.includes("pizza") ||
+            merchant.includes("shawarma") ||
+            merchant.includes("karahi") ||
+            merchant.includes("osmow") ||
+            name.includes("btrmlk")
+        ) {
+            return "Food & Dining";
+        }
+
+        // Groceries
+        if (merchant.includes("walmart") || merchant.includes("grocery")) {
+            return "Groceries";
+        }
+
+        // Transportation
+        if (
+            merchant.includes("petro-canada") ||
+            merchant.includes("gas") ||
+            merchant.includes("uber") ||
+            name.includes("uber")
+        ) {
+            return "Transportation";
+        }
+
+        // Shopping
+        if (
+            merchant.includes("amazon") ||
+            merchant.includes("apple") ||
+            merchant.includes("microsoft")
+        ) {
+            return "Shopping & Retail";
+        }
+
+        // Entertainment
+        if (
+            merchant.includes("netflix") ||
+            merchant.includes("steam") ||
+            merchant.includes("kindle")
+        ) {
+            return "Entertainment";
+        }
+
+        // Subscriptions & Software
+        if (
+            name.includes("subscription") ||
+            merchant.includes("claude") ||
+            merchant.includes("cursor") ||
+            merchant.includes("adobe")
+        ) {
+            return "Subscriptions & Software";
+        }
+
+        // Utilities & Bills
+        if (merchant.includes("bell canada") || name.includes("bell")) {
+            return "Utilities & Bills";
+        }
+
+        // Health & Fitness
+        if (merchant.includes("fit4less") || merchant.includes("gym")) {
+            return "Health & Fitness";
+        }
+
+        // Personal Care
+        if (merchant.includes("barber") || merchant.includes("salon")) {
+            return "Personal Care";
+        }
+
+        // Refunds
+        if (
+            transaction.amount < 0 &&
+            transaction.transaction_type !== "special"
+        ) {
+            return "Refunds & Credits";
+        }
+
+        return "Other";
+    };
+
+    // Calculate category summary (excluding payments)
+    const categoryStats = transactions.reduce((acc, transaction) => {
+        // Skip payment transactions
+        if (transaction.transaction_type === "special") {
+            return acc;
+        }
+
+        const category = categorizeTransaction(transaction);
+
+        if (!acc[category]) {
+            acc[category] = {
+                total: 0,
+                count: 0,
+            };
+        }
+
+        acc[category].total += transaction.amount || 0;
+        acc[category].count += 1;
+
+        return acc;
+    }, {});
+
+    // Convert to array and sort by total spending (highest first)
+    const categorySummary = Object.entries(categoryStats)
+        .map(([category, stats]) => ({
+            category,
+            total: stats.total,
+            count: stats.count,
+        }))
+        .sort((a, b) => b.total - a.total);
+
     // Generate year options (current year and past 5 years)
     const yearOptions = [];
     for (let i = 0; i < 6; i++) {
@@ -249,6 +374,78 @@ function App() {
                                 {transactions.length !== 1 ? "s" : ""}
                             </p>
                         </div>
+
+                        {categorySummary.length > 0 && (
+                            <div
+                                style={{
+                                    marginBottom: "40px",
+                                    marginTop: "30px",
+                                }}
+                            >
+                                <h3
+                                    style={{
+                                        marginBottom: "20px",
+                                        fontSize: "20px",
+                                        fontWeight: "600",
+                                    }}
+                                >
+                                    Spending by Category
+                                </h3>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Total Spent</th>
+                                            <th>Transactions</th>
+                                            <th>Avg per Transaction</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {categorySummary.map((item, index) => (
+                                            <tr key={index}>
+                                                <td
+                                                    style={{
+                                                        textTransform:
+                                                            "capitalize",
+                                                    }}
+                                                >
+                                                    {item.category}
+                                                </td>
+                                                <td
+                                                    style={{
+                                                        color:
+                                                            item.total >= 0
+                                                                ? "#dc3545"
+                                                                : "#28a745",
+                                                        fontWeight: "bold",
+                                                    }}
+                                                >
+                                                    ${item.total.toFixed(2)}
+                                                </td>
+                                                <td>{item.count}</td>
+                                                <td>
+                                                    $
+                                                    {(
+                                                        item.total / item.count
+                                                    ).toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        <h3
+                            style={{
+                                marginBottom: "20px",
+                                marginTop: "40px",
+                                fontSize: "20px",
+                                fontWeight: "600",
+                            }}
+                        >
+                            All Transactions
+                        </h3>
                         <table>
                             <thead>
                                 <tr>

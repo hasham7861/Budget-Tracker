@@ -1,6 +1,5 @@
 """Storage utilities for tokens and data."""
 
-import csv
 import json
 import os
 from pathlib import Path
@@ -9,7 +8,7 @@ from typing import Any, Dict, Optional
 import orjson
 
 # Use local .data directory in the project root
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 DATA_DIR = PROJECT_ROOT / ".data"
 ACCESS_TOKEN_FILE = DATA_DIR / "access-token.json"
 CACHE_DIR = DATA_DIR / "transactions"
@@ -17,7 +16,6 @@ CACHE_DIR = DATA_DIR / "transactions"
 
 def save_access_token(access_token: str, item_id: str) -> None:
     """Save access token to local storage."""
-    # Create the .budget-tracker directory if it doesn't exist
     ACCESS_TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     data = {"access_token": access_token, "item_id": item_id}
@@ -41,16 +39,10 @@ def get_access_token() -> Optional[str]:
         return None
 
 
-def has_access_token() -> bool:
-    """Check if access token exists."""
-    return get_access_token() is not None
-
-
 def get_cached_transactions(
     accountName: str, year: str, month: str
 ) -> Optional[list[Dict[str, Any]]]:
     """Get cached transactions from local storage."""
-
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     cache_file = CACHE_DIR / f"transactions_{accountName}_{year}_{month}.json"
 
@@ -78,67 +70,9 @@ def save_cached_transactions(
     accountName: str, year: str, month: str, transactions: list[Dict[str, Any]]
 ) -> None:
     """Save cached transactions to local storage."""
-
     if not transactions:
         return
 
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     with open(CACHE_DIR / f"transactions_{accountName}_{year}_{month}.json", "wb") as f:
         f.write(orjson.dumps(transactions, option=orjson.OPT_INDENT_2))
-
-
-def save_cached_transactions_csv(
-    accountName: str,
-    year: str,
-    month: str,
-    transactions: list[Dict[str, Any]],
-    summaryData: dict[str, Any],
-) -> None:
-    """Save cached transactions to local storage as CSV."""
-    if not transactions:
-        return
-
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    with open(CACHE_DIR / f"transactions_{accountName}_{year}_{month}.csv", "w") as f:
-        writer = csv.writer(f)
-
-        writer.writerow([""])
-        writer.writerow(["Summary"])
-        # add summary data to the csv
-        for key, value in summaryData.items():
-            if key == "totalSpendingByCategory":
-                writer.writerow(["Category", "Total Spending", "Total Transactions"])
-                for category, spending in value.items():
-                    writer.writerow(
-                        [
-                            category,
-                            spending,
-                            summaryData["totalTransactionsCountByCategory"][category],
-                        ]
-                    )
-            elif key == "totalTransactionsCountByCategory":
-                continue  # skip this key as it is already in totalSpendingByCategory
-            else:
-                writer.writerow([key, value])
-
-        writer.writerow([""])
-        writer.writerow(["Transactions"])
-
-        writer.writerow(transactions[0].keys())
-        for transaction in transactions:
-            writer.writerow(transaction.values())
-
-
-def get_cached_transactions_csv(
-    accountName: str, year: str, month: str
-) -> Optional[list[Dict[str, Any]]]:
-    """Get cached transactions from local storage as CSV."""
-
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    cache_file = CACHE_DIR / f"transactions_{accountName}_{year}_{month}.csv"
-
-    if not os.path.exists(cache_file):
-        return None
-
-    with open(cache_file, "r") as f:
-        return list(csv.reader(f))

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Re-authenticate Your Bank Account</title>
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .loading {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Re-authenticate Your Bank Account</h1>
+
+        <div class="info-box">
+            <strong>Note:</strong> This will re-authenticate your existing bank connection.
+            Your account link requires updated credentials or additional verification.
+        </div>
+
+        <div class="status loading" id="status">
+            Initializing...
+        </div>
+
+        <button id="linkButton" onclick="startPlaidLink()" style="display:none;">
+            Re-authenticate Bank Account
+        </button>
+    </div>
+
+    <script>
+        let plaidHandler = null;
+
+        async function initializePage() {
+            try {
+                document.getElementById('status').textContent = 'Loading Plaid Link...';
+
+                const response = await fetch('/api/plaid/create-update-link-token');
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to create link token');
+                }
+
+                const data = await response.json();
+
+                plaidHandler = Plaid.create({
+                    token: data.link_token,
+                    onSuccess: async (public_token, metadata) => {
+                        console.log('Re-authentication successful!');
+                        console.log('Metadata:', metadata);
+                        document.getElementById('status').innerHTML = '✅ Re-authentication successful!<br><br>Your bank account connection has been restored. You can now close this page.';
+                        document.getElementById('status').className = 'status success';
+                        document.getElementById('linkButton').style.display = 'none';
+                    },
+                    onExit: (err, metadata) => {
+                        if (err) {
+                            document.getElementById('status').innerHTML = '❌ Error: ' + err.error_message;
+                            document.getElementById('status').className = 'status error';
+                        } else {
+                            document.getElementById('status').innerHTML = 'Update flow exited. Click the button to try again.';
+                            document.getElementById('status').className = 'status loading';
+                        }
+                    },
+                    onEvent: (eventName, metadata) => {
+                        console.log('Event:', eventName, metadata);
+                    }
+                });
+
+                document.getElementById('status').innerHTML = '✅ Ready to re-authenticate!';
+                document.getElementById('status').className = 'status success';
+                document.getElementById('linkButton').style.display = 'block';
+
+                startPlaidLink();
+            } catch (error) {
+                document.getElementById('status').innerHTML = '❌ Failed to initialize: ' + error.message;
+                document.getElementById('status').className = 'status error';
+            }
+        }
+
+        function startPlaidLink() {
+            if (plaidHandler) {
+                plaidHandler.open();
+                document.getElementById('status').innerHTML = 'Complete the re-authentication in the popup...';
+                document.getElementById('status').className = 'status loading';
+            }
+        }
+
+        window.onload = initializePage;
+    </script>
+</body>
+</html>

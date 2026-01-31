@@ -33,8 +33,12 @@ def pull_statements(
 
     if not accountFindByName:
         print(
-            "❌ Account not found! Check your ACCOUNT_TO_FILTER environment variable."
+            f"❌ Account not found! Check your ACCOUNT_TO_FILTER environment variable."
         )
+        print(f"❌ ACCOUNT_TO_FILTER is set to: '{os.getenv('ACCOUNT_TO_FILTER')}'")
+        print(f"❌ Available accounts in this connection:")
+        for account in accounts:
+            print(f"   - {account['name']} (ID: {account['account_id']}, Type: {account['type']})")
         return
 
     transactions = get_cached_transactions(accountFindByName["name"], year, month)
@@ -109,5 +113,5 @@ def pull_statements(
         if transaction["amount"] > 0
     )
     print(f"Total spending: {totalSpending}")
-    
+
     return transactions

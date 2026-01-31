@@ -16,6 +16,7 @@ from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUse
 from plaid.model.products import Products
 from plaid.model.transaction import Transaction
 from plaid.model.transactions_get_request import TransactionsGetRequest
+from plaid.model.link_token_create_request_update import LinkTokenCreateRequestUpdate
 
 load_dotenv()
 
@@ -48,8 +49,8 @@ class PlaidClient:
         api_client = plaid.ApiClient(configuration)
         self.client = plaid_api.PlaidApi(api_client)
 
-    def create_link_token(self, redirect_uri: str = None) -> dict:
-        """Create a link token for account linking."""
+    def create_link_token(self, redirect_uri: str = None, access_token: str = None) -> dict:
+        """Create a link token for account linking or update mode."""
         request_params = {
             "user": LinkTokenCreateRequestUser(
                 client_user_id=str(uuid.uuid4()),
@@ -63,6 +64,12 @@ class PlaidClient:
         # Add redirect_uri if provided
         if redirect_uri:
             request_params["redirect_uri"] = redirect_uri
+
+        # Add update mode if access_token is provided
+        if access_token:
+            request_params["access_token"] = access_token
+            # Remove products when in update mode
+            del request_params["products"]
 
         request = LinkTokenCreateRequest(**request_params)
         response = self.client.link_token_create(request)

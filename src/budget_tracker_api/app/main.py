@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 from budget_tracker.services import PlaidClient
 from budget_tracker.commands import pull_statements
-from budget_tracker.utils.storage import save_access_token
+from budget_tracker.utils.storage import save_access_token, get_access_token
 
 app = FastAPI(title="Budget Tracker APP")
 
@@ -257,15 +257,188 @@ async def exchange_token(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/plaid/create-update-link-token")
+def create_update_link_token():
+    """Create a Plaid link token for re-authentication (update mode)."""
+    try:
+        # Get the existing access token
+        access_token = get_access_token()
+        if not access_token:
+            raise HTTPException(status_code=404, detail="No access token found. Please link an account first at /link")
+
+        # Create link token in update mode
+        response = plaid_client.create_link_token(redirect_uri=None, access_token=access_token)
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to create update link token: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to create update link token")
+
+
+@app.get("/update")
+def update_page():
+    """Serve a page to re-authenticate bank accounts using Plaid Link SDK (update mode)."""
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Re-authenticate Your Bank Account</title>
+        <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            .container {
+                background-color: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .status {
+                font-size: 18px;
+                margin: 20px 0;
+                padding: 15px;
+                border-radius: 4px;
+            }
+            .loading {
+                background-color: #fff3cd;
+                color: #856404;
+            }
+            .success {
+                background-color: #d4edda;
+                color: #155724;
+            }
+            .error {
+                background-color: #f8d7da;
+                color: #721c24;
+            }
+            button {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 18px;
+                margin: 10px 0;
+            }
+            button:hover {
+                background-color: #0056b3;
+            }
+            button:disabled {
+                background-color: #6c757d;
+                cursor: not-allowed;
+            }
+            .info-box {
+                background-color: #e7f3ff;
+                border-left: 4px solid #007bff;
+                padding: 15px;
+                margin: 20px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Re-authenticate Your Bank Account</h1>
+
+            <div class="info-box">
+                <strong>Note:</strong> This will re-authenticate your existing bank connection.
+                Your account link requires updated credentials or additional verification.
+            </div>
+
+            <div class="status loading" id="status">
+                Initializing...
+            </div>
+
+            <button id="linkButton" onclick="startPlaidLink()" style="display:none;">
+                Re-authenticate Bank Account
+            </button>
+        </div>
+
+        <script>
+            let plaidHandler = null;
+
+            // Initialize on page load
+            async function initializePage() {
+                try {
+                    document.getElementById('status').textContent = 'Loading Plaid Link...';
+
+                    const response = await fetch('/api/plaid/create-update-link-token');
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Failed to create link token');
+                    }
+
+                    const data = await response.json();
+
+                    plaidHandler = Plaid.create({
+                        token: data.link_token,
+                        onSuccess: async (public_token, metadata) => {
+                            console.log('Re-authentication successful!');
+                            console.log('Metadata:', metadata);
+                            document.getElementById('status').innerHTML = '✅ Re-authentication successful!<br><br>Your bank account connection has been restored. You can now close this page.';
+                            document.getElementById('status').className = 'status success';
+                            document.getElementById('linkButton').style.display = 'none';
+                        },
+                        onExit: (err, metadata) => {
+                            if (err) {
+                                document.getElementById('status').innerHTML = '❌ Error: ' + err.error_message;
+                                document.getElementById('status').className = 'status error';
+                            } else {
+                                document.getElementById('status').innerHTML = 'Update flow exited. Click the button to try again.';
+                                document.getElementById('status').className = 'status loading';
+                            }
+                        },
+                        onEvent: (eventName, metadata) => {
+                            console.log('Event:', eventName, metadata);
+                        }
+                    });
+
+                    document.getElementById('status').innerHTML = '✅ Ready to re-authenticate!';
+                    document.getElementById('status').className = 'status success';
+                    document.getElementById('linkButton').style.display = 'block';
+
+                    // Auto-open Plaid Link
+                    startPlaidLink();
+                } catch (error) {
+                    document.getElementById('status').innerHTML = '❌ Failed to initialize: ' + error.message;
+                    document.getElementById('status').className = 'status error';
+                }
+            }
+
+            function startPlaidLink() {
+                if (plaidHandler) {
+                    plaidHandler.open();
+                    document.getElementById('status').innerHTML = 'Complete the re-authentication in the popup...';
+                    document.getElementById('status').className = 'status loading';
+                }
+            }
+
+            // Initialize when page loads
+            window.onload = initializePage;
+        </script>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
+
+
 # Add more API routes here
 @app.get("/api/transactions")
-def get_transactions():
+def get_transactions(year: str = "2025", month: str = "12"):
     """
-    - get list of transactions from plaid api to return data as is for now.
+    Get list of transactions from plaid api for specified year and month.
+    Query params: year (default: 2025), month (default: 12)
     """
     statements = None
     try:
-        statements = pull_statements("2025", "12", format="json")
+        statements = pull_statements(year, month, format="json")
         logger.info("statements logging", statements)
     except Exception as e:
         logger.error(f"Failed to fetch transactions: {e}", exc_info=True)

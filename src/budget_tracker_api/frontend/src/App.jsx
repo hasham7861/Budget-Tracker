@@ -5,19 +5,19 @@ import { useState, useEffect, useRef } from "react";
 function App() {
     // Get current date as default
     const currentDate = new Date();
-    const [selectedYear, setSelectedYear] = useState(
-        currentDate.getFullYear().toString(),
+    const [selectedDate, setSelectedDate] = useState({
+        month: String(currentDate.getMonth() + 1).padStart(2, "0"),
+        year: currentDate.getFullYear().toString(),
+    }
     );
-    const [selectedMonth, setSelectedMonth] = useState(
-        (currentDate.getMonth() + 1).toString(),
-    );
+
     const [sortOrder, setSortOrder] = useState("desc"); // "asc" or "desc"
     const [notes, setNotes] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const saveTimeoutRef = useRef(null);
 
     const { transactions, transactionsIsLoading, transactionsIsErrored } =
-        useGetTransactions(selectedYear, selectedMonth);
+        useGetTransactions(selectedDate.year, selectedDate.month);
     console.log(transactions);
 
     // Fetch notes when year/month changes
@@ -25,7 +25,7 @@ function App() {
         const fetchNotes = async () => {
             try {
                 const response = await fetch(
-                    `/api/notes?year=${selectedYear}&month=${selectedMonth}`,
+                    `/api/notes?year=${selectedDate.year}&month=${selectedDate.month}`,
                 );
                 const data = await response.json();
                 setNotes(data.notes || "");
@@ -34,7 +34,7 @@ function App() {
             }
         };
         fetchNotes();
-    }, [selectedYear, selectedMonth]);
+    }, [selectedDate.year, selectedDate.month]);
 
     // Auto-save notes with debounce
     const handleNotesChange = (e) => {
@@ -56,8 +56,8 @@ function App() {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        year: selectedYear,
-                        month: selectedMonth,
+                        year: selectedDate.year,
+                        month: selectedDate.month,
                         notes: newNotes,
                     }),
                 });
@@ -304,8 +304,8 @@ function App() {
                             >
                                 <h3 style={{ margin: 0, color: "#333" }}>
                                     Spending Notes for{" "}
-                                    {monthNames[parseInt(selectedMonth) - 1]}{" "}
-                                    {selectedYear}
+                                    {monthNames[parseInt(selectedDate.month) - 1]}{" "}
+                                    {selectedDate.year}
                                 </h3>
                                 {isSaving && (
                                     <span
@@ -348,8 +348,8 @@ function App() {
                         >
                             <h2 style={{ margin: 0 }}>
                                 Transactions for{" "}
-                                {monthNames[parseInt(selectedMonth) - 1]}{" "}
-                                {selectedYear}
+                                {monthNames[parseInt(selectedDate.month) - 1]}{" "}
+                                {selectedDate.year}
                             </h2>
 
                             <div
@@ -387,57 +387,22 @@ function App() {
 
                                 <label style={{ fontWeight: "bold" }}>
                                     Month:
-                                    <select
-                                        value={selectedMonth}
-                                        onChange={(e) =>
-                                            setSelectedMonth(e.target.value)
-                                        }
-                                        style={{
+
+
+                                    <input type="month"   style={{
                                             marginLeft: "8px",
                                             padding: "8px 12px",
                                             fontSize: "16px",
                                             borderRadius: "4px",
                                             border: "1px solid #ccc",
                                             cursor: "pointer",
-                                        }}
-                                    >
-                                        {monthNames.map((month, index) => (
-                                            <option
-                                                key={index}
-                                                value={(index + 1).toString()}
-                                            >
-                                                {month}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        }}value={`${selectedDate.year}-${selectedDate.month.toString().padStart(2, '0')}`} onChange={(e) => setSelectedDate({
+                                            year: e.target.value.split("-")[0],
+                                            month: e.target.value.split("-")[1],
+                                        })} />
                                 </label>
 
-                                <label style={{ fontWeight: "bold" }}>
-                                    Year:
-                                    <select
-                                        value={selectedYear}
-                                        onChange={(e) =>
-                                            setSelectedYear(e.target.value)
-                                        }
-                                        style={{
-                                            marginLeft: "8px",
-                                            padding: "8px 12px",
-                                            fontSize: "16px",
-                                            borderRadius: "4px",
-                                            border: "1px solid #ccc",
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        {yearOptions.map((year) => (
-                                            <option
-                                                key={year}
-                                                value={year.toString()}
-                                            >
-                                                {year}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </label>
+                               
                             </div>
                         </div>
                         <div
